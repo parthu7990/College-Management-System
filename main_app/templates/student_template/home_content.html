@@ -1,0 +1,154 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+
+        <!-- RESULT BUTTON (ADDED) -->
+        <div class="row mb-3">
+            <div class="col-md-12 text-right">
+                <a href="{% url 'student_view_result' %}" class="btn btn-primary">
+                    <i class="fas fa-book"></i> View Result
+                </a>
+            </div>
+        </div>
+
+        <!-- Small boxes (Stat box) -->
+        <div class="row">
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>{{total_attendance}}</h3>
+                        <p>Total Attendance</p>
+                    </div>
+                    <div class="icon">
+                        <i class="nav-icon fas fa-calendar-alt"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>{{ percent_present }}<sup style="font-size: 20px">%</sup></h3>
+                        <p>Percentage Present</p>
+                    </div>
+                    <div class="icon">
+                        <i class="nav-icon fas fa-calendar-check"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3>{{percent_absent}}<sup style="font-size: 20px">%</sup></h3>
+                        <p>Percentage Absent</p>
+                    </div>
+                    <div class="icon">
+                        <i class="nav-icon fas fa-calendar-minus"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-primary">
+                    <div class="inner">
+                        <h3>{{total_subject}}</h3>
+                        <p>Total Subject</p>
+                    </div>
+                    <div class="icon">
+                        <i class="nav-icon fas fa-book"></i>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="row">
+
+            <!-- DONUT CHART -->
+            <div class="col-lg-6">
+                <div class="card card-secondary">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="attendanceData" style="height:250px;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BAR CHART -->
+            <div class="col-lg-6">
+                <div class="card card-secondary">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="attendanceStatistics" style="height:250px;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+$(document).ready(function(){
+
+    var subjects = {{data_name|safe}}
+    var data_present = {{data_present}}
+    var data_absent = {{data_absent}}
+
+    // DONUT CHART
+    var attendanceDataCanvas = $('#attendanceData').get(0).getContext('2d')
+    var donutData = {
+      labels: ['Present', 'Absent'],
+      datasets: [{
+          data: [{{percent_present}}, {{percent_absent}}],
+          backgroundColor : ['#00a65a','#f56954'],
+      }]
+    }
+
+    new Chart(attendanceDataCanvas, {
+      type: 'doughnut',
+      data: donutData,
+      options: { responsive: true }
+    });
+
+    // BAR CHART
+    var barChartCanvas = $('#attendanceStatistics').get(0).getContext('2d')
+
+    var barChartData = {
+        labels: subjects,
+        datasets: [
+            {
+                label: 'Present',
+                data: data_present,
+                backgroundColor: 'rgba(60,141,188,0.9)'
+            },
+            {
+                label: 'Absent',
+                data: data_absent,
+                backgroundColor: 'rgba(210,214,222,1)'
+            }
+        ]
+    }
+
+    new Chart(barChartCanvas, {
+        type: 'bar',
+        data: barChartData,
+        options: { responsive: true }
+    });
+
+});
+</script>
+{% endblock custom_js %}

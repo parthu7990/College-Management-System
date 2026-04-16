@@ -1,0 +1,195 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>C.M.S | Log In</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css' %}">
+    <link rel="stylesheet" href="{% static 'plugins/icheck-bootstrap/icheck-bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'dist/css/adminlte.min.css' %}">
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+</head>
+
+<body class="hold-transition login-page"
+style="background: url('{% static "dist/img/bg.jpg" %}') no-repeat center center fixed;background-size: cover;">
+
+<div class="login-box">
+    <div class="card">
+        <div class="card-body login-card-body">
+
+            <!-- Django Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-danger text-center">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form action="doLogin/" method="post">
+                {% csrf_token %}
+
+                <!-- EMAIL -->
+                <div class="input-group mb-1">
+    <input type="email" id="email" name="email" class="form-control" placeholder="Email (e.g. abc@gmail.com)">
+    <div class="input-group-append">
+        <div class="input-group-text">
+            <span class="fas fa-envelope"></span>
+        </div>
+    </div>
+</div>
+
+<small class="text-muted">Example: abc@gmail.com</small>
+<small id="email_error" class="text-danger d-block"></small>
+
+                <!-- PASSWORD -->
+                <div class="input-group mb-1">
+    <input type="password" id="password-field" name="password" class="form-control" placeholder="Password">
+    
+    <div class="input-group-append">
+        <div class="input-group-text" onclick="togglePassword()" style="cursor:pointer;">
+            <span id="eye-icon" class="fas fa-eye"></span>
+        </div>
+    </div>
+</div>
+
+<!-- PASSWORD RULE -->
+<small class="text-muted d-block">
+Example : password-123.
+</small>
+
+<small id="password_error" class="text-danger d-block"></small>
+                <!-- CAPTCHA -->
+                <div class="input-group mb-3">
+                    <div class="g-recaptcha" data-sitekey="6LfswtgZAAAAAJ7bhwqZZtDpBsc75ekH6FWA4Fnt"></div>
+                </div>
+                <small id="captcha_error" class="text-danger"></small>
+
+                <!-- BUTTON -->
+                <div class="row">
+                    <div class="col-8">
+                        <div class="icheck-primary">
+                            <input type="checkbox" id="remember">
+                            <label for="remember">Remember Me</label>
+                        </div>
+                    </div>
+
+                    <div class="col-4">
+                        <button type="submit" class="btn btn-success btn-block">Log In</button>
+                    </div>
+                </div>
+            </form>
+
+            <p class="mb-1">
+                <a href="{% url 'password_reset' %}">Forgot Password?</a>
+            </p>
+
+        </div>
+    </div>
+</div>
+
+<!-- JS -->
+<script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
+<script src="{% static 'plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'dist/js/adminlte.min.js' %}"></script>
+
+<!-- SHOW PASSWORD -->
+<script>
+function togglePassword() {
+    var passwordField = document.getElementById("password-field");
+    var eyeIcon = document.getElementById("eye-icon");
+
+    if (passwordField.type === "password") {
+        passwordField.type = "text";
+        eyeIcon.classList.replace("fa-eye", "fa-eye-slash");
+    } else {
+        passwordField.type = "password";
+        eyeIcon.classList.replace("fa-eye-slash", "fa-eye");
+    }
+}
+</script>
+
+<!-- VALIDATION SCRIPT -->
+<script>
+$(document).ready(function(){
+
+    // EMAIL
+    $("#email").on("keyup focus", function(){
+        let email = $(this).val()
+        let pattern = /^[^ ]+@[^ ]+\.[a-z]{2,3}$/
+
+        if(email == ""){
+            $("#email_error").text("Enter email")
+            $(this).css("border","2px solid red")
+        }
+        else if(!pattern.test(email)){
+            $("#email_error").text("Enter valid email")
+            $(this).css("border","2px solid red")
+        }
+        else{
+            $("#email_error").text("")
+            $(this).css("border","2px solid green")
+        }
+    })
+
+    // PASSWORD
+    $("#password-field").on("keyup focus", function(){
+        let password = $(this).val()
+        let pattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()]).{8,20}$/
+
+        if(password == ""){
+            $("#password_error").text("Enter password")
+            $(this).css("border","2px solid red")
+        }
+        else if(!pattern.test(password)){
+            $("#password_error").text("Must contain uppercase, lowercase, number & special char")
+            $(this).css("border","2px solid red")
+        }
+        else{
+            $("#password_error").text("")
+            $(this).css("border","2px solid green")
+        }
+    })
+
+    // FORM SUBMIT
+    $("form").submit(function(e){
+
+        let email = $("#email").val()
+        let password = $("#password-field").val()
+        let captcha = grecaptcha.getResponse()
+        let valid = true
+
+        if(email == ""){
+            $("#email_error").text("Email required")
+            valid = false
+        }
+
+        if(password == ""){
+            $("#password_error").text("Password required")
+            valid = false
+        }
+
+        if(captcha.length == 0){
+            $("#captcha_error").text("Verify captcha")
+            valid = false
+        } else {
+            $("#captcha_error").text("")
+        }
+
+        if(!valid){
+            e.preventDefault()
+        }
+
+    })
+
+})
+</script>
+
+</body>
+</html>

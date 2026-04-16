@@ -1,0 +1,58 @@
+{% extends 'main_app/base.html' %}
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+
+<section class="content">
+<div class="container-fluid">
+
+    <!-- RESULT TABLE -->
+    <div class="card card-dark">
+        <div class="card-header">
+            <h3 class="card-title">{{ page_title }}</h3>
+        </div>
+
+        <div class="table p-2">
+            <table class="table table-bordered table-hover">
+                <tr>
+                    <th>ID</th>
+                    <th>Subject</th>
+                    <th>Internal Exam</th>
+                    <th>External Exam</th>
+                    <th>Total</th>
+                    <th>Grade</th>
+                </tr>
+
+                {% for result in results %}
+                {% with total=result.test|add:result.exam %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ result.subject.name }}</td>
+                    <td>{{ result.test }}</td>
+                    <td>{{ result.exam }}</td>
+                    <td>{{ total }}</td>
+
+                    <td>
+                        {% if total == 100 %}
+                            <span class="text-success">A+</span>
+                        {% elif total >= 80 %}
+                            <span class="text-success">A</span>
+                        {% elif total >= 60 %}
+                            <span class="text-primary">B</span>
+                        {% elif total >= 40 %}
+                            <span class="text-warning">C</span>
+                        {% else %}
+                            <span class="text-danger">F</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endwith %}
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+</div>
+</section>
+
+{% endblock %}

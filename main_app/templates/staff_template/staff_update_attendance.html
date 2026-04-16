@@ -1,0 +1,194 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+
+                <div class="card card-dark">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+
+                    <div class="card-body">
+
+                        <!-- ✅ CSRF TOKEN (VERY IMPORTANT) -->
+                        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+                        <div class="form-group">
+                            <label>Subject</label>
+                            <select name="subject" class="form-control" id="subject">
+                                <option value="">----</option>
+                                {% for subject in subjects %}
+                                <option value="{{subject.id}}">{{subject.name}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Session</label>
+                            <select name="session" class="form-control" id="session">
+                                <option value="">----</option>
+                                {% for session in sessions %}
+                                <option value="{{session.id}}">{{session}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="alert alert-danger" id="error_attendance" style="display:none;"></div>
+                            <button type="button" id="fetch_attendance" class="btn btn-success btn-block">
+                                Fetch Attendance
+                            </button>
+                        </div>
+
+                        <div id="attendance_block" style="display:none;">
+                            <label>Attendance Date</label>
+                            <select id="attendance_date" class="form-control"></select>
+
+                            <button type="button" id="fetch_student" class="btn btn-success btn-block mt-2">
+                                Fetch Students
+                            </button>
+
+                            <div id="student_data" class="mt-3"></div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+
+{% block custom_js %}
+<script>
+$(document).ready(function () {
+
+    var csrftoken = $('input[name=csrfmiddlewaretoken]').val();
+
+    // 🔥 STORE SESSION GLOBALLY
+    var current_session = null;
+
+    // FETCH ATTENDANCE
+    $("#fetch_attendance").click(function(){
+        var subject = $("#subject").val()
+        var session = $("#session").val()
+
+        if (subject == "" || session == ""){
+            $("#error_attendance").html("Select Subject & Session").show()
+            return
+        }
+
+        $.ajax({
+            url: "{% url 'get_attendance' %}",
+            type: "POST",
+            data: {
+                csrfmiddlewaretoken: csrftoken,
+                subject: subject,
+                session: session
+            },
+            success: function(response){
+                var data = JSON.parse(response)
+                var html = ""
+
+                if(data.length == 0){
+                    alert("⚠️ No attendance found")
+                    return
+                }
+
+                // ✅ SAVE SESSION FROM RESPONSE
+                current_session = data[0].session
+
+                for (var i=0; i<data.length; i++){
+                    html += "<option value='"+data[i].attendance_date+"' data-id='"+data[i].id+"'>"+data[i].attendance_date+"</option>"
+                }
+
+                $("#attendance_date").html(html)
+                $("#attendance_block").show()
+            }
+        })
+    })
+
+
+    // FETCH STUDENTS
+    $("#fetch_student").click(function(){
+        var date = $("#attendance_date").val()
+
+        $.ajax({
+            url: "{% url 'get_student_attendance' %}",
+            type: "POST",
+            data: {
+                csrfmiddlewaretoken: csrftoken,
+                attendance_date_id: date
+            },
+            success: function(response){
+                var data = JSON.parse(response)
+                var html = ""
+
+                for (var i=0; i<data.length; i++){
+                    html += "<div><input type='checkbox' class='student_checkbox' value='"+data[i].id+"' "+(data[i].status ? "checked" : "")+"> "+data[i].name+"</div>"
+                }
+
+                html += "<button id='save_attendance' class='btn btn-primary mt-2'>Save Attendance</button>"
+
+                $("#student_data").html(html)
+            }
+        })
+    })
+
+
+    // SAVE ATTENDANCE (FINAL FIX)
+    $(document).on('click', '#save_attendance', function(){
+
+        var student_data = []
+
+        $(".student_checkbox").each(function(){
+            student_data.push({
+                id: $(this).val(),
+                status: $(this).is(":checked") ? 1 : 0
+            })
+        })
+
+        var date = $("#attendance_date").val()
+
+        console.log("Students:", student_data)
+        console.log("Session:", current_session)
+
+        $.ajax({
+            url: "{% url 'save_attendance' %}",
+            type: "POST",
+            data: {
+                csrfmiddlewaretoken: csrftoken,
+                date: date,
+                subject: $("#subject").val(),
+                session: current_session,   // ✅ FIXED
+                student_ids: JSON.stringify(student_data)
+            },
+
+            success: function(response){
+                console.log(response)
+
+                if(response.status == "success"){
+                    alert("✅ Attendance Saved / Updated")
+                } else {
+                    alert("❌ Error: " + response.message)
+                }
+            },
+
+            error: function(xhr){
+                console.log(xhr.responseText)
+                alert("❌ Server Error")
+            }
+        })
+
+    })
+
+})
+</script>
+{% endblock %}
