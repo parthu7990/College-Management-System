@@ -11,10 +11,10 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    'college-management-system-sbz5.onrender.com'
+    'https://college-management-system-xrqt.onrender.com'
 ]
 CSRF_TRUSTED_ORIGINS = [
-    'https://college-management-system-sbz5.onrender.com'
+    'https://college-management-system-xrqt.onrender.com'
 ]
 # APPLICATIONS
 INSTALLED_APPS = [
