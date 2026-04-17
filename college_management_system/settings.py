@@ -13,7 +13,9 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'college-management-system-sbz5.onrender.com'
 ]
-
+CSRF_TRUSTED_ORIGINS = [
+    'https://college-management-system-sbz5.onrender.com'
+]
 # APPLICATIONS
 INSTALLED_APPS = [
     'django.contrib.admin',
