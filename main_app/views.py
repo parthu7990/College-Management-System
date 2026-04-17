@@ -28,43 +28,62 @@ def login_page(request):
 # ===============================
 # LOGIN FUNCTION
 # ===============================
+import requests
+import json
+from django.contrib import messages
+from django.shortcuts import redirect
+from django.contrib.auth import login
+from django.urls import reverse
+
 def doLogin(request, **kwargs):
     if request.method != 'POST':
         return HttpResponse("<h4>Denied</h4>")
-    else:
-        captcha_token = request.POST.get('g-recaptcha-response')
-        captcha_url = "https://www.google.com/recaptcha/api/siteverify"
-        captcha_key = "6LegArosAAAAABi0tjcKDl3blbY1wMdgPxLMffth"
 
-        data = {'secret': captcha_key, 'response': captcha_token}
+    captcha_token = request.POST.get('g-recaptcha-response')
 
-        try:
-            captcha_server = requests.post(url=captcha_url, data=data)
-            response = json.loads(captcha_server.text)
-            if response['success'] == False:
-                messages.error(request, 'Invalid Captcha. Try Again')
-                return redirect('/')
-        except:
-            messages.error(request, 'Captcha error')
+    # 🔥 Replace with your SECRET KEY
+    captcha_secret = "6LegArosAAAAAMycTEQxf03mA-R8egBapbXdmA8s"
+
+    data = {
+        'secret': captcha_secret,
+        'response': captcha_token
+    }
+
+    try:
+        captcha_server = requests.post(
+            "https://www.google.com/recaptcha/api/siteverify",
+            data=data
+        )
+        response = captcha_server.json()
+
+        if not response.get('success'):
+            messages.error(request, 'Invalid Captcha. Try Again')
             return redirect('/')
 
-        user = EmailBackend.authenticate(
-            request,
-            username=request.POST.get('email'),
-            password=request.POST.get('password')
-        )
+    except Exception as e:
+        messages.error(request, 'Captcha verification failed')
+        return redirect('/')
 
-        if user != None:
-            login(request, user)
-            if user.user_type == '1':
-                return redirect(reverse("admin_home"))
-            elif user.user_type == '2':
-                return redirect(reverse("staff_home"))
-            else:
-                return redirect(reverse("student_home"))
+    # 🔐 Authentication
+    user = EmailBackend.authenticate(
+        request,
+        username=request.POST.get('email'),
+        password=request.POST.get('password')
+    )
+
+    if user is not None:
+        login(request, user)
+
+        if user.user_type == '1':
+            return redirect(reverse("admin_home"))
+        elif user.user_type == '2':
+            return redirect(reverse("staff_home"))
         else:
-            messages.error(request, "❌ Enter valid email or password")
-            return redirect("/")
+            return redirect(reverse("student_home"))
+
+    else:
+        messages.error(request, "Enter valid email or password")
+        return redirect("/")
 
 
 # ===============================
