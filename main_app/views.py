@@ -1,5 +1,6 @@
 import json
 import requests
+import os
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, JsonResponse
@@ -35,14 +36,19 @@ from django.shortcuts import redirect
 from django.contrib.auth import login
 from django.urls import reverse
 
+import os
+import requests
+from django.contrib import messages
+from django.shortcuts import redirect
+from django.contrib.auth import login
+from django.urls import reverse
+
 def doLogin(request, **kwargs):
     if request.method != 'POST':
         return HttpResponse("<h4>Denied</h4>")
 
     captcha_token = request.POST.get('g-recaptcha-response')
-
-    # 🔥 Replace with your SECRET KEY
-    captcha_secret = "6LegArosAAAAAMycTEQxf03mA-R8egBapbXdmA8s"
+    captcha_secret = os.getenv("RECAPTCHA_SECRET")
 
     data = {
         'secret': captcha_secret,
@@ -55,6 +61,9 @@ def doLogin(request, **kwargs):
             data=data
         )
         response = captcha_server.json()
+
+        # 🔍 Debug (remove later)
+        print(response)
 
         if not response.get('success'):
             messages.error(request, 'Invalid Captcha. Try Again')
@@ -80,11 +89,9 @@ def doLogin(request, **kwargs):
             return redirect(reverse("staff_home"))
         else:
             return redirect(reverse("student_home"))
-
     else:
         messages.error(request, "Enter valid email or password")
         return redirect("/")
-
 
 # ===============================
 # LOGOUT
